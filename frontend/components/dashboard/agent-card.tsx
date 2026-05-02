@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import {
   ClipboardList,
   Code2,
@@ -11,10 +12,15 @@ import {
   Pause,
   RotateCcw,
   Square,
+  Maximize2,
+  Minimize2,
+  Copy,
+  Check,
   type LucideIcon
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import { toast } from "@/hooks/use-toast"
 import type { Agent } from "@/lib/api"
@@ -54,6 +60,15 @@ interface AgentCardProps {
 
 export function AgentCard({ agent, compact = false }: AgentCardProps) {
   const Icon = iconMap[agent.icon] || Brain
+  const [expanded, setExpanded] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  const copyOutput = () => {
+    navigator.clipboard.writeText(agent.outputSnippet || '')
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+    toast({ title: "Copied!", description: `${agent.name} output copied to clipboard.` })
+  }
 
   if (compact) {
     return (
@@ -78,10 +93,16 @@ export function AgentCard({ agent, compact = false }: AgentCardProps) {
     )
   }
 
+  const hasOutput = agent.outputSnippet && agent.outputSnippet.trim().length > 0
+
   return (
-    <div className="group relative rounded-xl border border-border bg-card p-4 hover:border-primary/50 transition-colors">
+    <div className={cn(
+      "group relative rounded-xl border border-border bg-card transition-colors",
+      expanded ? "col-span-1 md:col-span-2" : "",
+      "hover:border-primary/50"
+    )}>
       {/* Header */}
-      <div className="flex items-start justify-between gap-3 mb-3">
+      <div className="flex items-start justify-between gap-3 p-4 pb-0">
         <div className="flex items-center gap-3">
           <div className={cn(
             "flex items-center justify-center size-10 rounded-lg",
@@ -102,48 +123,79 @@ export function AgentCard({ agent, compact = false }: AgentCardProps) {
         </div>
       </div>
 
-      {/* Progress */}
-      {(agent.status === 'working' || agent.status === 'completed') && (
-        <div className="mb-3">
-          <div className="flex items-center justify-between text-xs mb-1">
-            <span className="text-muted-foreground">Progress</span>
-            <span className="font-medium">{agent.progress}%</span>
+      <div className="p-4 pt-3 space-y-3">
+        {/* Progress */}
+        {(agent.status === 'working' || agent.status === 'completed') && (
+          <div>
+            <div className="flex items-center justify-between text-xs mb-1">
+              <span className="text-muted-foreground">Progress</span>
+              <span className="font-medium">{agent.progress}%</span>
+            </div>
+            <Progress value={agent.progress} className="h-1.5" />
           </div>
-          <Progress value={agent.progress} className="h-1.5" />
+        )}
+
+        {/* Last Action */}
+        <div>
+          <p className="text-xs text-muted-foreground mb-1">Last Action</p>
+          <p className="text-sm">{agent.lastAction}</p>
         </div>
-      )}
 
-      {/* Last Action */}
-      <div className="mb-3">
-        <p className="text-xs text-muted-foreground mb-1">Last Action</p>
-        <p className="text-sm">{agent.lastAction}</p>
-      </div>
+        {/* Output — Research-grade display */}
+        {hasOutput && (
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <p className="text-xs text-muted-foreground font-medium">Agent Output</p>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-6"
+                  onClick={copyOutput}
+                  title="Copy output"
+                >
+                  {copied ? <Check className="size-3 text-green-500" /> : <Copy className="size-3" />}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-6"
+                  onClick={() => setExpanded(!expanded)}
+                  title={expanded ? "Collapse" : "Expand"}
+                >
+                  {expanded ? <Minimize2 className="size-3" /> : <Maximize2 className="size-3" />}
+                </Button>
+              </div>
+            </div>
+            <ScrollArea className={cn(
+              "rounded-lg border border-border bg-muted/30",
+              expanded ? "h-[400px]" : "h-[150px]"
+            )}>
+              <pre className="text-xs font-mono p-3 whitespace-pre-wrap break-words leading-relaxed">
+                {agent.outputSnippet}
+              </pre>
+            </ScrollArea>
+          </div>
+        )}
 
-      {/* Output Snippet */}
-      <div className="mb-3">
-        <p className="text-xs text-muted-foreground mb-1">Output</p>
-        <pre className="text-xs bg-muted/50 rounded-md p-2 overflow-x-auto font-mono max-h-16 overflow-y-auto">
-          {agent.outputSnippet}
-        </pre>
-      </div>
-
-      {/* Controls */}
-      <div className="flex items-center gap-2 pt-2 border-t border-border">
-        <Button variant="ghost" size="sm" className="gap-1.5 text-xs h-7" disabled={agent.status !== 'working'}
-          onClick={() => toast({ title: `${agent.name} Paused`, description: `Agent "${agent.name}" has been paused.` })}>
-          <Pause className="size-3" />
-          Pause
-        </Button>
-        <Button variant="ghost" size="sm" className="gap-1.5 text-xs h-7" disabled={agent.status !== 'error'}
-          onClick={() => toast({ title: `${agent.name} Retrying`, description: `Re-running "${agent.name}" agent.` })}>
-          <RotateCcw className="size-3" />
-          Retry
-        </Button>
-        <Button variant="ghost" size="sm" className="gap-1.5 text-xs h-7 text-destructive hover:text-destructive" disabled={agent.status === 'idle'}
-          onClick={() => toast({ title: `${agent.name} Stopped`, description: `Agent "${agent.name}" has been stopped.`, variant: "destructive" })}>
-          <Square className="size-3" />
-          Stop
-        </Button>
+        {/* Controls */}
+        <div className="flex items-center gap-2 pt-2 border-t border-border">
+          <Button variant="ghost" size="sm" className="gap-1.5 text-xs h-7" disabled={agent.status !== 'working'}
+            onClick={() => toast({ title: `${agent.name} Paused`, description: `Agent "${agent.name}" has been paused.` })}>
+            <Pause className="size-3" />
+            Pause
+          </Button>
+          <Button variant="ghost" size="sm" className="gap-1.5 text-xs h-7" disabled={agent.status !== 'error'}
+            onClick={() => toast({ title: `${agent.name} Retrying`, description: `Re-running "${agent.name}" agent.` })}>
+            <RotateCcw className="size-3" />
+            Retry
+          </Button>
+          <Button variant="ghost" size="sm" className="gap-1.5 text-xs h-7 text-destructive hover:text-destructive" disabled={agent.status === 'idle'}
+            onClick={() => toast({ title: `${agent.name} Stopped`, description: `Agent "${agent.name}" has been stopped.`, variant: "destructive" })}>
+            <Square className="size-3" />
+            Stop
+          </Button>
+        </div>
       </div>
     </div>
   )

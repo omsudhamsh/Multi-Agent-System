@@ -75,11 +75,11 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between">
               <h2 className="font-semibold text-lg">Active Agents</h2>
               <span className="text-sm text-muted-foreground">
-                {agents.filter(a => a.status === 'working').length} working
+                {agents.filter(a => a.status === 'working').length || 0} working · {(agents.length > 0 ? agents : mockAgents).length} total
               </span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {(agents.length > 0 ? agents : mockAgents).slice(0, 4).map((agent) => (
+              {(agents.length > 0 ? agents : mockAgents).map((agent) => (
                 <AgentCard key={agent.id} agent={agent} />
               ))}
             </div>
@@ -91,21 +91,8 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Bottom Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Remaining Agents (Compact) */}
-          <div className="space-y-4">
-            <h2 className="font-semibold text-lg">Other Agents</h2>
-            <div className="space-y-2">
-              {(agents.length > 0 ? agents : mockAgents).slice(4).map((agent) => (
-                <AgentCard key={agent.id} agent={agent} compact />
-              ))}
-            </div>
-          </div>
-
-          {/* Recent Tasks */}
-          <RecentTasks tasks={tasks} />
-        </div>
+        {/* Recent Tasks */}
+        <RecentTasks tasks={tasks} />
       </div>
     </DashboardLayout>
   )

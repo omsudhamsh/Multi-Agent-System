@@ -18,6 +18,7 @@ import {
 import { FieldGroup, Field, FieldLabel } from "@/components/ui/field"
 import { getSettings, updateSettings } from "@/lib/api"
 import { toast } from "@/hooks/use-toast"
+import { downloadCsv, toCsv } from "@/lib/download"
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme()
@@ -223,25 +224,18 @@ export default function SettingsPage() {
                 </div>
               </div>
               <Button variant="outline" size="sm" onClick={() => {
-                const header = 'Setting,Value'
-                const rows = [
-                  `API Key,***`,
-                  `Model,"${model}"`,
-                  `Theme,"${theme}"`,
-                  `Notify on Task Complete,${notifications.taskComplete}`,
-                  `Notify on Errors,${notifications.errors}`,
-                  `Notify on Updates,${notifications.updates}`,
-                ]
-                const csv = [header, ...rows].join('\n')
-                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-                const url = URL.createObjectURL(blob)
-                const a = document.createElement('a')
-                a.href = url
-                a.download = `agentos-settings-${new Date().toISOString().slice(0,10)}.csv`
-                document.body.appendChild(a)
-                a.click()
-                document.body.removeChild(a)
-                URL.revokeObjectURL(url)
+                const csv = toCsv(
+                  ['Setting', 'Value'],
+                  [
+                    ['API Key', '***'],
+                    ['Model', model],
+                    ['Theme', theme || 'system'],
+                    ['Notify on Task Complete', String(notifications.taskComplete)],
+                    ['Notify on Errors', String(notifications.errors)],
+                    ['Notify on Updates', String(notifications.updates)],
+                  ]
+                )
+                downloadCsv('agentos-settings-' + new Date().toISOString().slice(0, 10) + '.csv', csv)
                 toast({ title: "Data Exported", description: "Your settings have been downloaded as CSV." })
               }}>Export</Button>
             </div>
