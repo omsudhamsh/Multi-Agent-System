@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
+import { toast } from "@/hooks/use-toast"
 import type { Agent } from "@/lib/api"
 
 type AgentStatus = Agent['status']
@@ -128,15 +129,18 @@ export function AgentCard({ agent, compact = false }: AgentCardProps) {
 
       {/* Controls */}
       <div className="flex items-center gap-2 pt-2 border-t border-border">
-        <Button variant="ghost" size="sm" className="gap-1.5 text-xs h-7" disabled={agent.status !== 'working'}>
+        <Button variant="ghost" size="sm" className="gap-1.5 text-xs h-7" disabled={agent.status !== 'working'}
+          onClick={() => toast({ title: `${agent.name} Paused`, description: `Agent "${agent.name}" has been paused.` })}>
           <Pause className="size-3" />
           Pause
         </Button>
-        <Button variant="ghost" size="sm" className="gap-1.5 text-xs h-7" disabled={agent.status !== 'error'}>
+        <Button variant="ghost" size="sm" className="gap-1.5 text-xs h-7" disabled={agent.status !== 'error'}
+          onClick={() => toast({ title: `${agent.name} Retrying`, description: `Re-running "${agent.name}" agent.` })}>
           <RotateCcw className="size-3" />
           Retry
         </Button>
-        <Button variant="ghost" size="sm" className="gap-1.5 text-xs h-7 text-destructive hover:text-destructive" disabled={agent.status === 'idle'}>
+        <Button variant="ghost" size="sm" className="gap-1.5 text-xs h-7 text-destructive hover:text-destructive" disabled={agent.status === 'idle'}
+          onClick={() => toast({ title: `${agent.name} Stopped`, description: `Agent "${agent.name}" has been stopped.`, variant: "destructive" })}>
           <Square className="size-3" />
           Stop
         </Button>

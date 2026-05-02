@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
+import { toast } from "@/hooks/use-toast"
 import type { Plugin } from "@/lib/api"
 
 const iconMap: Record<string, LucideIcon> = {
@@ -99,7 +100,8 @@ export function PluginCard({ plugin, onToggle, onConnect }: PluginCardProps) {
           </Button>
         )}
         
-        <Button variant="ghost" size="sm" className="text-xs h-7">
+        <Button variant="ghost" size="sm" className="text-xs h-7"
+          onClick={() => toast({ title: `Configure ${plugin.name}`, description: `Opening configuration for ${plugin.name} plugin.` })}>
           Configure
         </Button>
       </div>

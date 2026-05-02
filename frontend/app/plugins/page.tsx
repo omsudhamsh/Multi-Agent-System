@@ -106,10 +106,6 @@ export default function PluginsPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Button variant="outline" className="gap-2 sm:w-auto">
-            <Filter className="size-4" />
-            Filters
-          </Button>
         </div>
 
         {/* Category Tabs */}

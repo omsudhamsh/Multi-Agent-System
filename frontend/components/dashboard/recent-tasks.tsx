@@ -76,7 +76,7 @@ function TaskRow({ task }: { task: Task }) {
         )}
       </div>
       
-      <div className="text-xs text-muted-foreground shrink-0">
+      <div className="text-xs text-muted-foreground shrink-0" suppressHydrationWarning>
         {new Date(task.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
       </div>
     </div>

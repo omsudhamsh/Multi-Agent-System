@@ -1,19 +1,41 @@
 "use client"
 
 import { useState } from "react"
-import { Plus, FolderKanban, MoreHorizontal, Clock, CheckCircle2 } from "lucide-react"
+import { Plus, FolderKanban, MoreHorizontal, Clock, CheckCircle2, Search, Pencil, Archive, Trash2, FolderOpen } from "lucide-react"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
+import { Input } from "@/components/ui/input"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { toast } from "@/hooks/use-toast"
 
-const projects = [
+interface Project {
+  id: string
+  name: string
+  description: string
+  status: 'active' | 'completed' | 'paused'
+  progress: number
+  tasksCompleted: number
+  totalTasks: number
+  lastUpdated: string
+}
+
+const defaultProjects: Project[] = [
   {
     id: '1',
     name: 'AgentOS Dashboard',
@@ -63,6 +85,68 @@ const statusColors = {
 }
 
 export default function ProjectsPage() {
+  const [projects, setProjects] = useState<Project[]>(defaultProjects)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [showNewDialog, setShowNewDialog] = useState(false)
+  const [showEditDialog, setShowEditDialog] = useState(false)
+  const [editProject, setEditProject] = useState<Project | null>(null)
+  const [newName, setNewName] = useState("")
+  const [newDesc, setNewDesc] = useState("")
+
+  const filtered = projects.filter(p =>
+    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    p.description.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  const handleCreate = () => {
+    if (!newName.trim()) return
+    const project: Project = {
+      id: `proj-${Date.now()}`,
+      name: newName.trim(),
+      description: newDesc.trim() || "No description",
+      status: 'active',
+      progress: 0,
+      tasksCompleted: 0,
+      totalTasks: 0,
+      lastUpdated: 'Just now'
+    }
+    setProjects(prev => [project, ...prev])
+    setShowNewDialog(false)
+    setNewName("")
+    setNewDesc("")
+    toast({ title: "Project Created", description: `"${project.name}" has been created.` })
+  }
+
+  const handleEdit = () => {
+    if (!editProject || !newName.trim()) return
+    setProjects(prev => prev.map(p =>
+      p.id === editProject.id ? { ...p, name: newName.trim(), description: newDesc.trim() || p.description } : p
+    ))
+    setShowEditDialog(false)
+    setEditProject(null)
+    toast({ title: "Project Updated", description: "Project details saved." })
+  }
+
+  const handleArchive = (id: string) => {
+    setProjects(prev => prev.map(p =>
+      p.id === id ? { ...p, status: 'paused' as const } : p
+    ))
+    toast({ title: "Project Archived", description: "Project has been paused/archived." })
+  }
+
+  const handleDelete = (id: string) => {
+    const name = projects.find(p => p.id === id)?.name
+    setProjects(prev => prev.filter(p => p.id !== id))
+    toast({ title: "Project Deleted", description: `"${name}" has been removed.`, variant: "destructive" })
+  }
+
+  const openEdit = (project: Project) => {
+    setEditProject(project)
+    setNewName(project.name)
+    setNewDesc(project.description)
+    setShowEditDialog(true)
+  }
+
   return (
     <DashboardLayout>
       <div className="p-4 md:p-6 space-y-6">
@@ -74,10 +158,21 @@ export default function ProjectsPage() {
               Manage and track your AI-assisted projects
             </p>
           </div>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => { setNewName(""); setNewDesc(""); setShowNewDialog(true) }}>
             <Plus className="size-4" />
             New Project
           </Button>
+        </div>
+
+        {/* Search */}
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+          <Input
+            placeholder="Search projects..."
+            className="pl-9"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
 
         {/* Stats */}
@@ -102,7 +197,7 @@ export default function ProjectsPage() {
 
         {/* Project Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {projects.map((project) => (
+          {filtered.map((project) => (
             <div key={project.id} className="rounded-xl border border-border bg-card p-5 hover:border-primary/50 transition-colors">
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div className="flex items-center gap-3">
@@ -121,10 +216,19 @@ export default function ProjectsPage() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem>Open</DropdownMenuItem>
-                    <DropdownMenuItem>Edit</DropdownMenuItem>
-                    <DropdownMenuItem>Archive</DropdownMenuItem>
-                    <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => toast({ title: "Opened", description: `Viewing "${project.name}"` })}>
+                      <FolderOpen className="size-4 mr-2" /> Open
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => openEdit(project)}>
+                      <Pencil className="size-4 mr-2" /> Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleArchive(project.id)}>
+                      <Archive className="size-4 mr-2" /> Archive
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(project.id)}>
+                      <Trash2 className="size-4 mr-2" /> Delete
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -149,7 +253,7 @@ export default function ProjectsPage() {
                   </div>
                 </div>
                 <Badge variant="outline" className="text-xs capitalize gap-1.5">
-                  <span className={`size-1.5 rounded-full ${statusColors[project.status as keyof typeof statusColors]}`} />
+                  <span className={`size-1.5 rounded-full ${statusColors[project.status]}`} />
                   {project.status}
                 </Badge>
               </div>
@@ -157,23 +261,72 @@ export default function ProjectsPage() {
           ))}
         </div>
 
-        {/* Empty State for New Users */}
-        {projects.length === 0 && (
+        {/* Empty State */}
+        {filtered.length === 0 && (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <div className="size-16 rounded-full bg-muted flex items-center justify-center mb-4">
               <FolderKanban className="size-8 text-muted-foreground" />
             </div>
-            <h3 className="font-semibold text-lg mb-1">No projects yet</h3>
+            <h3 className="font-semibold text-lg mb-1">{searchQuery ? "No matching projects" : "No projects yet"}</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Create your first project to get started with AI-assisted development
+              {searchQuery ? "Try a different search term" : "Create your first project to get started"}
             </p>
-            <Button className="gap-2">
-              <Plus className="size-4" />
-              Create Project
-            </Button>
+            {!searchQuery && (
+              <Button className="gap-2" onClick={() => setShowNewDialog(true)}>
+                <Plus className="size-4" /> Create Project
+              </Button>
+            )}
           </div>
         )}
       </div>
+
+      {/* New Project Dialog */}
+      <Dialog open={showNewDialog} onOpenChange={setShowNewDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>New Project</DialogTitle>
+            <DialogDescription>Create a new AI-assisted project.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Project Name</label>
+              <Input placeholder="e.g. My New App" value={newName} onChange={e => setNewName(e.target.value)} onKeyDown={e => e.key === "Enter" && handleCreate()} autoFocus />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Description</label>
+              <Input placeholder="Brief project description" value={newDesc} onChange={e => setNewDesc(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowNewDialog(false)}>Cancel</Button>
+            <Button onClick={handleCreate} disabled={!newName.trim()}>Create Project</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Project Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Project</DialogTitle>
+            <DialogDescription>Update project details.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Project Name</label>
+              <Input value={newName} onChange={e => setNewName(e.target.value)} onKeyDown={e => e.key === "Enter" && handleEdit()} autoFocus />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Description</label>
+              <Input value={newDesc} onChange={e => setNewDesc(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditDialog(false)}>Cancel</Button>
+            <Button onClick={handleEdit} disabled={!newName.trim()}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   )
 }
