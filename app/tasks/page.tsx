@@ -15,7 +15,8 @@ const statusConfig = {
     icon: Clock,
     label: 'Pending',
     color: 'text-muted-foreground',
-    bgColor: 'bg-muted'
+    bgColor: 'bg-muted',
+    animate: false
   },
   running: {
     icon: Loader2,
@@ -28,13 +29,15 @@ const statusConfig = {
     icon: CheckCircle2,
     label: 'Completed',
     color: 'text-green-500',
-    bgColor: 'bg-green-500/10'
+    bgColor: 'bg-green-500/10',
+    animate: false
   },
   failed: {
     icon: XCircle,
     label: 'Failed',
     color: 'text-destructive',
-    bgColor: 'bg-destructive/10'
+    bgColor: 'bg-destructive/10',
+    animate: false
   }
 }
 
