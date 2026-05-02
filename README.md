@@ -57,7 +57,7 @@ AgentOS is a production-ready multi-agent system that orchestrates specialized A
 ### 1. Clone the Repository
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/omsudhamsh/Multi-Agent-System.git
 cd Multi-Agent-System
 ```
 
