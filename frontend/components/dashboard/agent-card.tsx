@@ -16,7 +16,9 @@ import {
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
-import type { Agent, AgentStatus } from "@/lib/mock-data"
+import type { Agent } from "@/lib/api"
+
+type AgentStatus = Agent['status']
 
 const iconMap: Record<string, LucideIcon> = {
   ClipboardList,

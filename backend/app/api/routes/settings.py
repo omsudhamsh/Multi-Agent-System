@@ -10,18 +10,18 @@ _settings = Settings(
     theme="system"
 )
 
-@router.get("/settings", response_model=Settings)
+@router.get("", response_model=Settings)
 async def get_settings():
     """Get global application settings."""
     return _settings
 
-@router.put("/settings", response_model=Settings)
+@router.put("", response_model=Settings)
 async def update_settings(settings_update: SettingsUpdate):
     """Update global application settings."""
     global _settings
-    update_data = settings_update.dict(exclude_unset=True)
+    update_data = settings_update.model_dump(exclude_unset=True)
     
     # Create new settings object with updated fields
-    _settings = Settings(**{**_settings.dict(), **update_data})
+    _settings = Settings(**{**_settings.model_dump(), **update_data})
     
     return _settings

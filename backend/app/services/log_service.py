@@ -1,3 +1,4 @@
+import logging
 from typing import List
 from datetime import datetime
 from app.schemas import LogEntry, TimelineEvent, LogLevel
@@ -33,7 +34,7 @@ class LogService:
             self._logs = self._logs[-self._max_logs:]
         
         logger.log(
-            getattr(logger, level.upper(), logger.info),
+            getattr(logging, level.upper(), logging.INFO),
             f"[{agent}] {message}"
         )
         

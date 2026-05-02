@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
@@ -9,13 +10,30 @@ from app.api import api_router
 setup_logging()
 logger = get_logger(__name__)
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan events."""
+    # Startup
+    logger.info("=" * 60)
+    logger.info("AgentOS Backend Starting")
+    logger.info(f"Environment: {'Development' if settings.DEBUG else 'Production'}")
+    logger.info(f"CORS Origins: {settings.cors_origins_list}")
+    logger.info(f"Gemini Model: {settings.GEMINI_MODEL}")
+    logger.info("=" * 60)
+    yield
+    # Shutdown
+    logger.info("AgentOS Backend Shutting Down")
+
+
 # Create FastAPI app
 app = FastAPI(
     title="AgentOS Backend",
     description="Multi-Agent AI System Backend powered by Gemini",
     version="1.0.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    lifespan=lifespan
 )
 
 # Configure Session Middleware
@@ -36,23 +54,6 @@ app.add_middleware(
 
 # Include API routes
 app.include_router(api_router)
-
-
-@app.on_event("startup")
-async def startup_event():
-    """Run on application startup."""
-    logger.info("=" * 60)
-    logger.info("AgentOS Backend Starting")
-    logger.info(f"Environment: {'Development' if settings.DEBUG else 'Production'}")
-    logger.info(f"CORS Origins: {settings.cors_origins_list}")
-    logger.info(f"Gemini Model: {settings.GEMINI_MODEL}")
-    logger.info("=" * 60)
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Run on application shutdown."""
-    logger.info("AgentOS Backend Shutting Down")
 
 
 @app.get("/")
@@ -76,3 +77,4 @@ if __name__ == "__main__":
         reload=settings.DEBUG,
         log_level=settings.LOG_LEVEL.lower()
     )
+

@@ -7,7 +7,7 @@ from app.services.plugin_manager import PluginManager
 router = APIRouter()
 
 
-@router.get("/plugins", response_model=List[Plugin])
+@router.get("", response_model=List[Plugin])
 async def get_plugins(
     plugin_manager: PluginManager = Depends(get_plugin_manager)
 ):
@@ -15,7 +15,7 @@ async def get_plugins(
     return await plugin_manager.get_all_plugins()
 
 
-@router.get("/plugins/{plugin_id}", response_model=Plugin)
+@router.get("/{plugin_id}", response_model=Plugin)
 async def get_plugin(
     plugin_id: str,
     plugin_manager: PluginManager = Depends(get_plugin_manager)
@@ -27,7 +27,7 @@ async def get_plugin(
     return plugin
 
 
-@router.put("/plugins/{plugin_id}/toggle", response_model=Plugin)
+@router.put("/{plugin_id}/toggle", response_model=Plugin)
 async def toggle_plugin(
     plugin_id: str,
     toggle_data: PluginToggle,
@@ -40,7 +40,7 @@ async def toggle_plugin(
     return plugin
 
 
-@router.post("/plugins/{plugin_id}/connect", response_model=Plugin)
+@router.post("/{plugin_id}/connect", response_model=Plugin)
 async def connect_plugin(
     plugin_id: str,
     plugin_manager: PluginManager = Depends(get_plugin_manager)

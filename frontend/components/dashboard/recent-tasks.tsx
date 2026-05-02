@@ -5,7 +5,8 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
-import { recentTasks as mockTasks, type Task } from "@/lib/mock-data"
+import { recentTasks as mockTasks } from "@/lib/mock-data"
+import type { Task } from "@/lib/api"
 
 const statusConfig = {
   pending: {

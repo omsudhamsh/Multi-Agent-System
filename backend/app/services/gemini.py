@@ -11,33 +11,52 @@ class GeminiService:
     
     def __init__(self):
         """Initialize LLM service."""
-        from app.api.routes.settings import _settings
-        self.api_key = _settings.apiKey
-        self.model = _settings.model
+        self.api_key = settings.GEMINI_API_KEY
+        self.model = settings.GEMINI_MODEL
         
-        # Fallback to config if settings are empty
-        if not self.api_key or self.api_key.startswith("sk-") or "â€¢" in self.api_key:
-            self.api_key = settings.GEMINI_API_KEY
-            self.model = settings.GEMINI_MODEL
+        # Try to use runtime settings if available and valid
+        try:
+            from app.api.routes.settings import _settings
+            if self._is_valid_api_key(_settings.apiKey):
+                self.api_key = _settings.apiKey
+                self.model = _settings.model
+        except Exception:
+            pass
         
-        # Determine API base URL based on model
-        if "groq" in self.model.lower() or (self.api_key and self.api_key.startswith("gsk_")):
-            self.base_url = "https://api.groq.com/openai/v1"
-            logger.info(f"Using Groq API with model: {self.model}")
-        else:
-            self.base_url = "https://api.openai.com/v1"
-            logger.info(f"Using OpenAI-compatible API with model: {self.model}")
+        # Determine API base URL based on model/key
+        self.base_url = self._resolve_base_url()
+        logger.info(f"Using API with model: {self.model} at {self.base_url}")
+    
+    @staticmethod
+    def _is_valid_api_key(key: str) -> bool:
+        """Check if an API key is a real key (not a dummy/masked placeholder)."""
+        if not key or len(key) < 10:
+            return False
+        # Reject keys that look like masked placeholders
+        if key.startswith("sk-") and "•" in key:
+            return False
+        if "•" in key or "â€¢" in key:
+            return False
+        return True
+    
+    def _resolve_base_url(self) -> str:
+        """Determine the correct API base URL from model name and key prefix."""
+        if self.api_key and self.api_key.startswith("gsk_"):
+            return "https://api.groq.com/openai/v1"
+        if "groq" in self.model.lower():
+            return "https://api.groq.com/openai/v1"
+        return "https://api.openai.com/v1"
     
     def _refresh_credentials(self):
         """Refresh credentials from global settings."""
-        from app.api.routes.settings import _settings
-        if _settings.apiKey and not (_settings.apiKey.startswith("sk-") or "â€¢" in _settings.apiKey):
-            self.api_key = _settings.apiKey
-            self.model = _settings.model
-            if "groq" in self.model.lower() or self.api_key.startswith("gsk_"):
-                self.base_url = "https://api.groq.com/openai/v1"
-            else:
-                self.base_url = "https://api.openai.com/v1"
+        try:
+            from app.api.routes.settings import _settings
+            if self._is_valid_api_key(_settings.apiKey):
+                self.api_key = _settings.apiKey
+                self.model = _settings.model
+                self.base_url = self._resolve_base_url()
+        except Exception:
+            pass
 
     async def generate(self, prompt: str, system_instruction: Optional[str] = None) -> str:
         """Generate text using LLM API."""
