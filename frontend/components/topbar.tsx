@@ -20,6 +20,13 @@ import { Badge } from "@/components/ui/badge"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { toast } from "@/hooks/use-toast"
 
 const projects = [
   { id: '1', name: 'AgentOS Dashboard' },
@@ -58,6 +65,15 @@ export function Topbar() {
   const isConnected = true
   const [notifications, setNotifications] = useState<Notification[]>(defaultNotifications)
   const [notifOpen, setNotifOpen] = useState(false)
+  const [activeProject, setActiveProject] = useState(projects[0])
+
+  const handleProjectSelect = (project: typeof projects[0]) => {
+    setActiveProject(project)
+    toast({
+      title: "Project Switched",
+      description: `You are now viewing ${project.name}.`,
+    })
+  }
 
   const dismissNotif = (id: string) => {
     setNotifications(prev => prev.filter(n => n.id !== id))
@@ -76,14 +92,18 @@ export function Topbar() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="gap-2 font-medium">
-            <span className="hidden sm:inline">AgentOS Dashboard</span>
+            <span className="hidden sm:inline">{activeProject.name}</span>
             <span className="sm:hidden">Project</span>
             <ChevronDown className="size-4 text-muted-foreground" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
           {projects.map((project) => (
-            <DropdownMenuItem key={project.id}>
+            <DropdownMenuItem 
+              key={project.id}
+              onClick={() => handleProjectSelect(project)}
+              className={project.id === activeProject.id ? "bg-muted" : ""}
+            >
               {project.name}
             </DropdownMenuItem>
           ))}
@@ -91,12 +111,27 @@ export function Topbar() {
       </DropdownMenu>
 
       {/* Search */}
-      <div className="relative flex-1 max-w-md hidden md:flex">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+      <div className="relative flex-1 max-w-md hidden md:flex items-center">
+        <Search className="absolute left-3 size-4 text-muted-foreground" />
         <Input
           placeholder="Search tasks, agents, logs..."
-          className="pl-9 bg-secondary/50"
+          className="pl-9 pr-10 bg-secondary/50"
         />
+        <div className="absolute right-3">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center justify-center size-5 rounded-full text-muted-foreground hover:text-foreground transition-colors cursor-help">
+                  <span className="sr-only">Info</span>
+                  <i className="text-xs font-serif font-bold italic">i</i>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Quick search across all tasks, agents, and logs.</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </div>
 
       <div className="flex items-center gap-2 ml-auto">

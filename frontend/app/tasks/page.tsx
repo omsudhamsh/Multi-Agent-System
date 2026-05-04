@@ -18,8 +18,13 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 import { getTasks, type Task } from "@/lib/api"
-import { recentTasks } from "@/lib/mock-data"
 import { useRouter } from "next/navigation"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 const statusConfig = {
   pending: {
@@ -52,30 +57,6 @@ const statusConfig = {
   }
 }
 
-// Extended mock tasks
-const fallbackTasks: Task[] = [
-  ...recentTasks,
-  {
-    id: 'task-5',
-    prompt: 'Create a responsive navigation component with mobile menu',
-    status: 'completed' as const,
-    progress: 100,
-    confidenceScore: 96,
-    createdAt: '2024-01-13T11:00:00Z',
-    completedAt: '2024-01-13T11:45:00Z',
-    agents: ['planner', 'developer', 'reviewer']
-  },
-  {
-    id: 'task-6',
-    prompt: 'Optimize database queries for better performance',
-    status: 'completed' as const,
-    progress: 100,
-    confidenceScore: 89,
-    createdAt: '2024-01-12T15:00:00Z',
-    completedAt: '2024-01-12T16:20:00Z',
-    agents: ['researcher', 'developer', 'tester']
-  }
-]
 
 export default function TasksPage() {
   const router = useRouter()
@@ -87,9 +68,9 @@ export default function TasksPage() {
   const fetchTasks = useCallback(async () => {
     try {
       const fetched = await getTasks()
-      setTasks(fetched.length > 0 ? fetched : fallbackTasks)
+      setTasks(fetched || [])
     } catch {
-      setTasks(fallbackTasks)
+      setTasks([])
     } finally {
       setLoading(false)
     }
@@ -101,7 +82,7 @@ export default function TasksPage() {
     return () => clearInterval(interval)
   }, [fetchTasks])
 
-  const allTasks = tasks.length > 0 ? tasks : fallbackTasks
+  const allTasks = tasks || []
 
   const filteredTasks = allTasks.filter(t => {
     const matchesSearch = t.prompt.toLowerCase().includes(searchQuery.toLowerCase())
@@ -128,7 +109,22 @@ export default function TasksPage() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Tasks</h1>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight flex items-center gap-2">
+              Tasks
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <div className="flex items-center justify-center size-5 rounded-full bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors mt-1">
+                      <span className="sr-only">Info</span>
+                      <i className="text-xs font-serif font-bold italic">i</i>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Manage and filter all tasks executed by the agents.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </h1>
             <p className="text-muted-foreground mt-1">
               View and manage all your AI task executions
             </p>
@@ -174,10 +170,25 @@ export default function TasksPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input
               placeholder="Search tasks..."
-              className="pl-9"
+              className="pl-9 pr-10"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center justify-center size-5 rounded-full text-muted-foreground hover:text-foreground transition-colors cursor-help">
+                      <span className="sr-only">Info</span>
+                      <i className="text-xs font-serif font-bold italic">i</i>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Search tasks by prompt or description.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

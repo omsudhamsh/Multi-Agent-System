@@ -8,7 +8,12 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { getPlugins, togglePlugin, connectPlugin, type Plugin } from "@/lib/api"
-import { plugins as mockPlugins } from "@/lib/mock-data"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 const categories = ['All', 'Research', 'Files', 'Development', 'Automation', 'Data', 'Communication', 'Productivity', 'AI']
 
@@ -33,7 +38,7 @@ export default function PluginsPage() {
     fetchPlugins()
   }, [fetchPlugins])
 
-  const displayPlugins = plugins.length > 0 ? plugins : mockPlugins
+  const displayPlugins = plugins || []
 
   const filteredPlugins = displayPlugins.filter(plugin => {
     const matchesSearch = (plugin.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -78,7 +83,22 @@ export default function PluginsPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Plugin Marketplace</h1>
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight flex items-center gap-2">
+                Plugin Marketplace
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <div className="flex items-center justify-center size-5 rounded-full bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors mt-1">
+                        <span className="sr-only">Info</span>
+                        <i className="text-xs font-serif font-bold italic">i</i>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Enable and connect plugins to give agents extra capabilities like web search.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </h1>
               {loading && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
             </div>
             <p className="text-muted-foreground mt-1">
@@ -101,10 +121,25 @@ export default function PluginsPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input
               placeholder="Search plugins..."
-              className="pl-9"
+              className="pl-9 pr-10"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center justify-center size-5 rounded-full text-muted-foreground hover:text-foreground transition-colors cursor-help">
+                      <span className="sr-only">Info</span>
+                      <i className="text-xs font-serif font-bold italic">i</i>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Search plugins by name or description.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
           </div>
         </div>
 

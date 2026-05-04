@@ -22,6 +22,12 @@ import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { promptExamples, plugins as allPlugins } from "@/lib/mock-data"
 import { createTask, Task, getPlugins } from "@/lib/api"
 import { toast } from "@/hooks/use-toast"
@@ -348,14 +354,25 @@ export function TaskInput({ onTaskCreated }: { onTaskCreated?: (task: Task) => v
 
         {/* Actions */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-          <Button
-            onClick={handleSubmit}
-            disabled={!prompt.trim() || isSubmitting}
-            className="gap-2 flex-1 sm:flex-none"
-          >
-            <Send className="size-4" />
-            {isSubmitting ? "Starting..." : "Start Task"}
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex-1 sm:flex-none">
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={!prompt.trim() || isSubmitting}
+                    className="gap-2 w-full"
+                  >
+                    <Send className="size-4" />
+                    {isSubmitting ? "Starting..." : "Start Task"}
+                  </Button>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Submit this prompt to the AI agents to begin execution.</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
           <div className="flex gap-2">
             {/* ---- SAVE WORKFLOW ---- */}

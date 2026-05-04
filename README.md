@@ -116,6 +116,34 @@ Frontend will start on http://localhost:3000
 3. Click "Start Task"
 4. Watch the agents collaborate in real-time!
 
+## 🧑‍💻 How to Use AgentOS (For Beginners)
+
+Even if you have no technical knowledge, you can easily use AgentOS to accomplish complex tasks. Follow these simple steps:
+
+### Step 1: Open the Dashboard
+Once the system is running, open your web browser and go to `http://localhost:3000`. This is your main control center (Dashboard).
+
+### Step 2: Describe Your Task
+At the top of the Dashboard, you'll see a text input box. Simply type what you want the AI to do in plain English.
+*Example: "Research the latest trends in renewable energy and write a short summary."*
+
+### Step 3: Start the Process
+Click the **"Start Task"** button (or press Enter).
+
+### Step 4: Watch the Agents Work
+AgentOS will automatically break your task down and assign it to different "Agents":
+- **Planner** figures out the steps.
+- **Researcher** searches the web or reads data.
+- **Developer/Writer** drafts the content or code.
+- **Reviewer** checks the quality.
+
+You can watch their progress live in the **Execution Timeline** and the **Active Agents** panels on the Dashboard.
+
+### Step 5: View the Result
+Once all agents complete their jobs, your task status will change to "Completed". You can view the final output in the tasks list or the generated files.
+
+*Tip: Need extra capabilities like Web Search? Go to the **Plugins** page from the sidebar and flip the switch to enable them!*
+
 ## 📖 Documentation
 
 - **[Backend Setup Guide](backend/SETUP.md)** - Detailed backend installation

@@ -20,6 +20,12 @@ import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import { toast } from "@/hooks/use-toast"
 import type { Plugin } from "@/lib/api"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 const iconMap: Record<string, LucideIcon> = {
   Globe,
@@ -63,7 +69,22 @@ export function PluginCard({ plugin, onToggle, onConnect }: PluginCardProps) {
             <Icon className="size-5" />
           </div>
           <div>
-            <h3 className="font-semibold text-sm">{plugin.name}</h3>
+            <h3 className="font-semibold text-sm flex items-center gap-1.5">
+              {plugin.name}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center justify-center size-4 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-help">
+                      <span className="sr-only">Info</span>
+                      <i className="text-[10px] font-serif font-bold italic">i</i>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{plugin.description}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </h3>
             <Badge variant="outline" className="text-xs mt-0.5">
               {plugin.category}
             </Badge>

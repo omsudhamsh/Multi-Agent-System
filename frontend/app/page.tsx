@@ -7,8 +7,14 @@ import { AgentCard } from "@/components/dashboard/agent-card"
 import { ExecutionTimeline } from "@/components/dashboard/execution-timeline"
 import { ProgressOverview } from "@/components/dashboard/progress-overview"
 import { RecentTasks } from "@/components/dashboard/recent-tasks"
-import { agents as mockAgents } from "@/lib/mock-data"
+import { TaskResultCard } from "@/components/dashboard/task-result-card"
 import { getAgents, getTasks, getTimeline, Task, Agent, TimelineEvent } from "@/lib/api"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 export default function DashboardPage() {
   const [agents, setAgents] = useState<Agent[]>([])
@@ -73,15 +79,36 @@ export default function DashboardPage() {
           {/* Agent Status - Takes 2 columns */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="font-semibold text-lg">Active Agents</h2>
+              <h2 className="font-semibold text-lg flex items-center gap-2">
+                Active Agents
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <div className="flex items-center justify-center size-5 rounded-full bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+                        <span className="sr-only">Info</span>
+                        <i className="text-xs font-serif font-bold italic">i</i>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>View the real-time status of all active agents.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </h2>
               <span className="text-sm text-muted-foreground">
-                {agents.filter(a => a.status === 'working').length || 0} working · {(agents.length > 0 ? agents : mockAgents).length} total
+                {agents.filter(a => a.status === 'working').length || 0} working · {agents.length} total
               </span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {(agents.length > 0 ? agents : mockAgents).map((agent) => (
-                <AgentCard key={agent.id} agent={agent} />
-              ))}
+              {agents.length > 0 ? (
+                agents.map((agent) => (
+                  <AgentCard key={agent.id} agent={agent} />
+                ))
+              ) : (
+                <div className="col-span-1 md:col-span-2 text-center text-sm text-muted-foreground p-8">
+                  No agents available. Ensure the backend is running.
+                </div>
+              )}
             </div>
           </div>
 
@@ -91,8 +118,13 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Recent Tasks */}
-        <RecentTasks tasks={tasks} />
+        {/* Results & Recent Tasks */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <TaskResultCard 
+            taskId={tasks.find(t => t.status === 'completed' || t.status === 'failed')?.id} 
+          />
+          <RecentTasks tasks={tasks} />
+        </div>
       </div>
     </DashboardLayout>
   )
