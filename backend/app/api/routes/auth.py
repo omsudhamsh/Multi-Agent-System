@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from starlette.responses import RedirectResponse
 from authlib.integrations.starlette_client import OAuth
 from app.core.config import settings
+from app.db.database import AsyncSessionLocal
+from app.db.models import User
 import logging
 
 logger = logging.getLogger(__name__)
@@ -30,11 +32,26 @@ async def auth_google(request: Request):
     """Handle Google login callback."""
     try:
         token = await oauth.google.authorize_access_token(request)
-        user = token.get('userinfo')
-        if user:
-            # Here you would typically create/update user in DB
-            # For now, we'll just return the user info (or set a cookie/session)
-            request.session['user'] = user
+        userinfo = token.get('userinfo')
+        if userinfo:
+            user_id = userinfo.get("sub")
+            email = userinfo.get("email")
+            name = userinfo.get("name")
+            picture = userinfo.get("picture")
+            
+            # Upsert user in database
+            async with AsyncSessionLocal() as session:
+                db_user = await session.get(User, user_id)
+                if not db_user:
+                    db_user = User(id=user_id, email=email, name=name, picture=picture)
+                    session.add(db_user)
+                else:
+                    db_user.name = name
+                    db_user.picture = picture
+                await session.commit()
+            
+            # Set session
+            request.session['user'] = userinfo
             return RedirectResponse(url="http://localhost:3000/")
     except Exception as e:
         logger.error(f"Error during Google login: {e}")

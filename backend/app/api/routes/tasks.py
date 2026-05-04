@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
 from fastapi.responses import StreamingResponse
 from typing import List
 from app.schemas import Task, TaskCreate
+from app.api.auth_deps import get_current_user
 from app.api.dependencies import (
     get_task_manager,
     get_task_executor,
@@ -22,11 +23,12 @@ async def create_task(
     background_tasks: BackgroundTasks,
     task_manager: TaskManager = Depends(get_task_manager),
     task_executor: TaskExecutor = Depends(get_task_executor),
-    log_service: LogService = Depends(get_log_service)
+    log_service: LogService = Depends(get_log_service),
+    current_user: dict = Depends(get_current_user)
 ):
     """Create and start a new task."""
     # Create task
-    task = await task_manager.create_task(task_data)
+    task = await task_manager.create_task(task_data, user_id=current_user["sub"])
     
     # Start execution in background
     background_tasks.add_task(execute_task_background, task, task_manager, task_executor, log_service)
@@ -78,10 +80,11 @@ async def execute_task_background(
 
 @router.get("", response_model=List[Task])
 async def get_tasks(
-    task_manager: TaskManager = Depends(get_task_manager)
+    task_manager: TaskManager = Depends(get_task_manager),
+    current_user: dict = Depends(get_current_user)
 ):
     """Get all tasks."""
-    return await task_manager.get_all_tasks()
+    return await task_manager.get_all_tasks(user_id=current_user["sub"])
 
 
 @router.get("/{task_id}", response_model=Task)

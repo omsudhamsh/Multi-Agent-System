@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useTheme } from "next-themes"
-import { Search, Moon, Sun, Bell, ChevronDown, Wifi, WifiOff, X, CheckCircle2, AlertTriangle, Info } from "lucide-react"
+import { Search, Moon, Sun, Bell, ChevronDown, Wifi, WifiOff, X, CheckCircle2, AlertTriangle, Info, LogOut, User as UserIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -27,6 +27,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { toast } from "@/hooks/use-toast"
+import { useAuth } from "@/components/auth-provider"
+import { getGoogleLoginUrl, getLogoutUrl } from "@/lib/api"
 
 const projects = [
   { id: '1', name: 'AgentOS Dashboard' },
@@ -66,6 +68,8 @@ export function Topbar() {
   const [notifications, setNotifications] = useState<Notification[]>(defaultNotifications)
   const [notifOpen, setNotifOpen] = useState(false)
   const [activeProject, setActiveProject] = useState(projects[0])
+  
+  const { user, isAuthenticated, isLoading } = useAuth()
 
   const handleProjectSelect = (project: typeof projects[0]) => {
     setActiveProject(project)
@@ -218,6 +222,43 @@ export function Topbar() {
           <Moon className="absolute size-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
           <span className="sr-only">Toggle theme</span>
         </Button>
+        
+        {/* User Auth */}
+        <Separator orientation="vertical" className="h-6 mx-1" />
+        
+        {!isLoading && (
+          isAuthenticated && user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <img src={user.picture} alt={user.name} className="rounded-full object-cover" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <div className="flex items-center justify-start gap-2 p-2">
+                  <div className="flex flex-col space-y-1 leading-none">
+                    <p className="font-medium">{user.name}</p>
+                    <p className="w-[200px] truncate text-sm text-muted-foreground">{user.email}</p>
+                  </div>
+                </div>
+                <Separator />
+                <DropdownMenuItem asChild className="cursor-pointer text-destructive mt-2">
+                  <a href={getLogoutUrl()} className="flex items-center w-full">
+                    <LogOut className="mr-2 size-4" />
+                    <span>Log out</span>
+                  </a>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button variant="outline" size="sm" asChild className="gap-2 hidden sm:flex">
+              <a href={getGoogleLoginUrl()}>
+                <UserIcon className="size-4" />
+                <span>Log In</span>
+              </a>
+            </Button>
+          )
+        )}
       </div>
     </header>
   )

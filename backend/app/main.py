@@ -5,6 +5,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from app.core.config import settings
 from app.core.logging import setup_logging, get_logger
 from app.api import api_router
+from app.db.database import init_db
 
 # Setup logging
 setup_logging()
@@ -21,6 +22,11 @@ async def lifespan(app: FastAPI):
     logger.info(f"CORS Origins: {settings.cors_origins_list}")
     logger.info(f"Gemini Model: {settings.GEMINI_MODEL}")
     logger.info("=" * 60)
+    
+    # Initialize SQLite database
+    await init_db()
+    logger.info("Database initialized")
+    
     yield
     # Shutdown
     logger.info("AgentOS Backend Shutting Down")
